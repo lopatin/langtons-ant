@@ -1,0 +1,151 @@
+<html>
+<head>
+	<title>Langton's Ant</title>
+<script>
+/**
+ * Javescript simulation of Langton's Ant
+ */
+(function(){
+	"use strict";
+	window.onload = function(){
+		var DIRECTIONS = ['up', 'right', 'down', 'left'];
+
+		function Arena(){
+			var that = this;
+
+			this.canvas = document.getElementById("antCanvas");
+			this.ctx = this.canvas.getContext('2d');
+
+			var cells = [],
+				count = 0,
+				res = 100,
+				width = 500,
+				p_size = width/res;
+			that.start_pos = res/2;
+
+			function init(){
+				that.ant = new Ant(that);
+				for(var x = 0; x < res; x++){
+					var tempArr = [];
+					for(var y = 0; y < res; y++){
+						tempArr.push(-1);
+					}
+					cells.push(tempArr);
+				}
+
+				that.iterator = setInterval(that.iterate, 5);
+
+				document.getElementById("skip").onclick = function(){
+					// count = 6000;
+				};
+			}
+
+			this.draw = function(){
+				clearArena();
+				this.ctx.fillStyle = "#555";
+
+				for(var x = 0; x < cells.length; x++){
+					for(var y = 0; y < cells[0].length; y++){
+						if(cells[x][y] === 1){
+							that.ctx.fillRect(x*p_size, y*p_size, p_size, p_size);
+						}
+					}
+				}
+
+				this.ctx.fillStyle = "red";
+				this.ctx.fillRect(that.ant.x*p_size, that.ant.y*p_size, p_size, p_size);
+			};
+
+			this.iterate = function(){
+				var x = that.ant.x,
+					y = that.ant.y;
+				that.ant.changeDirection(cells[x][y]);
+				that.ant.move();
+				flipCell(x,y);
+				that.draw();
+
+				if(count === 10000){
+					document.getElementById("test").innerHTML = JSON.stringify(cells);
+				}
+
+				if(count % 10 === 0){
+					document.getElementById("count").innerHTML = count + " steps";
+				}
+				count++;
+			};
+
+			function clearArena(){
+				that.ctx.fillStyle = "white";
+				that.ctx.fillRect(0,0,width,width);
+			}
+
+			function flipCell(x, y){
+				cells[x][y] = -cells[x][y];
+			}
+
+			init();
+		}
+
+		function Ant(arena){
+			var that = this;
+
+			this.x = this.y = arena.start_pos;
+			this.direction = 0;
+
+			var a_size = arena.start_pos*2;
+			this.move = function(){
+				switch(DIRECTIONS[that.direction]){
+					case 'up': that.y = (that.y - 1)%a_size; break;
+					case 'down': that.y = (that.y + 1)%a_size; break;
+					case 'left': that.x = (that.x - 1)%a_size; break;
+					case 'right': that.x = (that.x + 1)%a_size; break;
+				}
+				if(that.x < 0) {
+					that.x = a_size + that.x;
+				}
+				if(that.y < 0) {
+					that.y = a_size + that.y;
+				}
+			};
+
+			this.changeDirection = function(cellVal){
+				that.direction = (that.direction - cellVal)%4;
+				if(that.direction < 0){
+					that.direction = 4 + that.direction;
+				}
+			};
+		}
+
+		new Arena();
+	};
+})();
+</script>
+
+<style>
+#container{
+	text-align: center;
+}
+
+#antCanvas{
+	border: 1px dotted #999;
+}
+#count, #buttonHolder{
+	margin: 10px auto;
+	text-align: center;
+}
+</style>
+</head>
+<body>
+	<div id="container">
+		<h1>Langton's Ant</h1>
+		<canvas id="antCanvas" width="500" height="500"></canvas>
+	</div>
+	<div id="count">
+	</div>
+	<div id="buttonHolder">
+		<button id="skip">Skip to step 10,000</button>
+	</div>
+	<div id="test">
+	</div>
+</body>
+</html>
